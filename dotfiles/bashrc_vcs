@@ -1,0 +1,71 @@
+# Author: Alan Hazelden <http://www.draknek.org/>
+# 
+# Usage:
+# 1) download as .bashrc_vcs
+# 2) In .bashrc append: source ~/.bashrc_vcs
+# 
+# Thanks to:
+# http://asemanfar.com/Current-Git-Branch-in-Bash-Prompt
+# http://www.entropy.ch/blog/Developer/2009/03/30/Git-and-SVN-Status-in-the-Bash-Prompt.html
+
+c_red=$(tput setaf 1)
+c_orange=$(tput setaf 3)
+c_green=$(tput setaf 2)
+c_reset=$(tput sgr0)
+
+vcs_color ()
+{
+	local color=""
+	local svn_text=$(svnversion 2>/dev/null)
+	
+	# Check for SVN
+	if [ $? -eq 0 ] && [ "$svn_text" != 'exported' ]
+	then
+		# Handle SVN
+		case "$svn_text" in
+			*[0-9])
+				color="$c_green"
+			;;
+			*)
+				color="$c_red"
+			;;
+		esac
+	# Check for Git
+	elif git rev-parse --git-dir >/dev/null 2>&1
+	then
+		# Handle Git
+		if git diff --quiet 2>/dev/null >&2
+		then
+			if git diff --cached --quiet 2>/dev/null >&2
+			then
+				color="$c_green"
+			else
+				color="$c_orange"
+			fi
+		else
+			color="$c_red"
+		fi
+	# Neither SVN nor Git found
+	else
+		return 0
+	fi
+	
+	echo -ne "$color"
+}
+
+vcs_text ()
+{
+	local svn_text=$(svnversion 2>/dev/null)
+	
+	if [ $? -eq 0 ] && [ "$svn_text" != 'exported' ]
+	then
+		echo -n " (r$svn_text)"
+	else
+		__git_ps1
+	fi
+}
+
+
+
+PS1='\w\[$(vcs_color)\]$(vcs_text)\[$c_reset\]$ '
+

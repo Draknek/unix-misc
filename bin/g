@@ -1,0 +1,12 @@
+#!/bin/sh
+
+grepargs=''
+lessargs=''
+
+if [ -t 1 ]
+then
+  grepargs='--color=always'
+  lessargs='-R'
+fi
+
+grep --exclude-dir=.svn --exclude-dir=.git --exclude=*~ $grepargs "$@" | less $lessargs

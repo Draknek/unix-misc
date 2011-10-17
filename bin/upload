@@ -1,0 +1,103 @@
+#! /usr/bin/perl -w
+
+use strict;
+use File::Basename;
+
+my $www_dir = '/media/data/www';
+
+my $scp_opts = '-pr';
+
+my $command = $0=~/upload/ ? 'upload' : 'download';
+
+my ($file, @filelist);
+
+foreach $file (@ARGV)
+{
+  if ($file =~ /:/)
+  {
+    $file =~ /^(.*?):(.*)$/;
+    $file = "$www_dir/$1/$2";
+  }
+  
+  $file =~ s!/$!!;
+  my $dir = dirname($file);
+  my $filename = basename($file);
+  
+  -e $file || $command eq 'download' || die "File does not exist: $file";
+  -e $dir || die "Nowhere to put file: $file";
+  
+  $dir = `~/bin/echodir $dir`;
+  $file = "$dir/$filename";
+  if ($file !~ s!^$www_dir/!!)
+  {
+    my $reldir = '.';
+    if (-l $file)
+    {
+      my $link = readlink($file);
+      $reldir = dirname($link);
+      $filename = basename($link);
+    }
+    $dir = `~/bin/echodir $dir $reldir`;
+    $file = "$dir/$filename";
+    -e $file || $command eq 'download' || die "File does not exist: $file";
+    if ($file !~ s!^$www_dir/!!)
+    {
+      die "File is incorrectly placed: $file";
+    }
+  }
+  $file =~ s!/$!!;
+  push @filelist, $file;
+}
+
+my %done = ();
+
+foreach $file (@filelist)
+{
+  my ($host, $dir, @files);
+  if ($file !~ m!/!)
+  {
+    $host = $file;
+    $dir = '';
+    push @files, '*';
+  }
+  else
+  {
+    $file =~ m!^([^/]*)/(.*/)?([^/]*)$!;
+    $host = $1;
+    $dir = $2 ? $2 : '';
+  }
+  
+  next if $done{"$host/$dir"};
+  
+  $done{"$host/$dir"} = 1;
+  
+  foreach (@filelist)
+  {
+    my $dir_escaped = quotemeta($dir);
+    if (m!^$host/($dir_escaped[^/]*)$!) {push @files, $1;}
+  }
+  
+  open(DOMAIN_FILE, "$www_dir/$host/.domain") or die "No domain file for host $host";
+  
+  my $domain = <DOMAIN_FILE>;
+  
+  close(DOMAIN_FILE);
+  
+  # Trim
+  $domain =~ s/^\s+//;
+  $domain =~ s/\s+$//;
+  
+  $domain or die "$host domain file is empty";
+  
+  my $filestring = '';
+  foreach (@files)
+  {
+    $filestring .= (($command eq 'upload') ? " $www_dir/$host/$_" : " $domain/$_");
+  }
+  my $target = (($command eq 'upload') ? "$domain/$dir" : "$www_dir/$host/$dir");
+  #my $scp = "scp $scp_opts $filestring $target";
+  #print "$scp\n";
+  system("terminal-run 'scp $scp_opts $filestring $target' '$command'");
+  
+}
+

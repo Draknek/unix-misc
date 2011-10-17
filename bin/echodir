@@ -1,0 +1,8 @@
+#! /bin/bash
+
+if [[ $# == 1 ]]
+then cd $1
+elif [[ $# == 2 ]]
+then cd -P $1; cd -P $2
+fi
+echo -n $PWD;
