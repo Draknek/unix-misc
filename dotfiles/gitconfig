@@ -4,8 +4,13 @@
 [core]
 	editor = vim
 	whitespace = -blank-at-eol
+	autocrlf = input
 [color]
 	ui = auto
+[merge]
+	conflictstyle = diff3
+[push]
+	default = tracking
 [alias]
 	ci = commit
 	ci-amend = commit --amend -C HEAD
@@ -14,9 +19,9 @@
 	st = status
 #	up = "!git fetch ; git rebase origin"
 #	upp = "!git fetch ; git rebase origin ; git push"
-        whois = "!sh -c 'git log -i -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -"
-        whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
+	whois = "!sh -c 'git log -i -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -"
+	whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
 	co = checkout
 	k = "!gitk --all &"
-	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an> %Creset%C(yellow)(%cd)%Creset' --abbrev-commit --date=local
 	praise = blame
